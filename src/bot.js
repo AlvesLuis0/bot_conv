@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import TelegramBot from 'node-telegram-bot-api';
 import { SessionManager } from './services/session-manager.js';
 import { Authenticator } from './services/authenticator.js';
@@ -9,10 +6,10 @@ import { Endpoint } from './services/endpoint.js';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { ENVIRONMENT } from './config/env.js';
 
 // Token do seu bot
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+const bot = new TelegramBot(ENVIRONMENT.TELEGRAM_TOKEN, { polling: true });
 
 // Sistema de controle de uso das conversões
 const conversaoUsage = new Map(); // conversaoNumber -> { username, userId, timestamp }
