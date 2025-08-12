@@ -7,13 +7,19 @@ export class RemoveUsageCommand extends Command {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
+    const userId = callbackQuery.from.id;
     const action = callbackQuery.data;
     const [,conv] = action.split('_');
     const usageStorage = this.dependencies.usageStorage;
+    const usage = usageStorage.getUsage(conv);
 
-    if (!usageStorage.inUse(conv)) {
+    const permittedIds = [
+      usage.userId
+    ];
+
+    if(!permittedIds.includes(userId)) {
       this.bot.answerCallbackQuery(callbackQuery.id, {
-        text: `❌ Conversão ${conv} não está em uso.`,
+        text: `❌ Apenas o usuário @${usage.username} ou administradores podem liberar esta conversão.`,
         show_alert: true
       });
       return;

@@ -13,15 +13,6 @@ export class SetUsageCommand extends Command {
     const [,conv] = action.split('_');
     const usageStorage = this.dependencies.usageStorage;
 
-    if (usageStorage.inUse(conv)) {
-      const usage = usageStorage.getUsage(conv);
-      this.bot.answerCallbackQuery(callbackQuery.id, {
-        text: `❌ Conversão ${conv} já está sendo usada por @${usage.username}.`,
-        show_alert: true
-      });
-      return;
-    }
-
     usageStorage.setUsage(conv, { username, userId });
 
     const conversions = mapConversions(usageStorage, ConversionManager.getNames());
