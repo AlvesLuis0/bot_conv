@@ -23,7 +23,6 @@ export class SetUsageCommand extends Command {
     }
 
     usageStorage.setUsage(conv, { username, userId });
-    usageStorage.save();
 
     const conversions = mapConversions(usageStorage, ConversionManager.getNames());
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
@@ -40,6 +39,8 @@ export class SetUsageCommand extends Command {
       parse_mode: 'Markdown',
       reply_markup: inlineKeyboard
     });
+
+    usageStorage.save();
   }
 
   checkAndExecute(query) {
