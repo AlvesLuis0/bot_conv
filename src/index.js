@@ -15,11 +15,15 @@ async function getConvName(number) {
   const signer = new RequestSigner(apiEndpoint, session);
   try {
     await auth.signIn({ username: 'jetro', password: 'Aa1234567' });
-    const signedPath = signer.sign(apiEndpoint.getFullPath('api?modelo%3Dappgrupoempress'));
-    const signedUrl = apiEndpoint.base + signedPath;
+    const path = apiEndpoint.getFullPath('api?modelo%3Dappgrupoempress');
+    const sessionSignature = signer.sign(path);
+    const signedUrl = `${apiEndpoint.base}${path}&session_signature=${sessionSignature}`;
+
     return (await axios.get(signedUrl)).data.data[0].Subdominio;
+
   } catch (err) {
     console.error('Erro:', err.message);
+    return 'Fora do ar';
   }
 }
 

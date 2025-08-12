@@ -23,6 +23,6 @@ export class RequestSigner {
     const separator = pathAndQuery.includes('?') ? '&' : '?';
     const path = pathAndQuery.startsWith('/') ? pathAndQuery.slice(1) : pathAndQuery;
 
-    return `/${path}${separator}session_signature=${this.session.sessionIDHexa8}${nonce}${signature}`;
+    return `${this.session.sessionIDHexa8}${nonce}${signature}`;
   }
 }
