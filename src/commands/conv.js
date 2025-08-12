@@ -1,5 +1,6 @@
 import { Command } from "./command.js";
 import { ConversionService } from "../services/conversion.js";
+import { ConversionManager } from "../services/conversion-manager.js";
 
 export class ConvCommand extends Command {
   regex = /^\/conv$/;
@@ -12,6 +13,10 @@ export class ConvCommand extends Command {
     const responses = await getAllConversions();
     const conversions = mapConversions(usageStorage, responses);
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
+
+    for(const conv of conversions) {
+      ConversionManager.setName(conv.number, conv.name);
+    }
 
     this.bot.sendMessage(chatId, message, {
       parse_mode: 'Markdown',
@@ -59,7 +64,6 @@ function generateConversionInlineKeyboard(conversions) {
     }
     
     const actionType = conv.inUse ? 'liberar' : 'usar';
-    console.log({ text, actionType, convNumber: conv.number });
     row.push({
       text: text,
       callback_data: `${actionType}_${conv.number}`

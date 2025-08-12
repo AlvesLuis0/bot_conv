@@ -7,6 +7,18 @@ export class UsageStorage {
     this.path = path.join(process.cwd(), 'data', file);
   }
 
+  setUsage(user, conv) {
+    const usage = this.data.get(conv || {});
+    usage.username = user.name;
+    usage.userId = user.id;
+    usage.timestamp = Date.now()
+    this.data.set(conv, usage);
+  }
+
+  removeUsage(conv) {
+    this.data.delete(conv);
+  }
+
   async save() {
     const dataDir = path.dirname(this.path);
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
@@ -15,7 +27,7 @@ export class UsageStorage {
     fs.writeFileSync(this.path, JSON.stringify(dataToSave, null, 2));
   }
 
-  async load() {
+  load() {
     if (fs.existsSync(this.path)) {
       const parsedData = JSON.parse(fs.readFileSync(this.path, 'utf8'));
       
