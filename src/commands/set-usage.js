@@ -1,5 +1,5 @@
 import { ConversionManager } from "../services/conversion-manager.js";
-import { generateConversionInlineKeyboard, mapConversions } from "../utils/conv.js";
+import { generateConversionInlineKeyboard, mapConversions } from "../utils/conversion.js";
 import { Command } from "./command.js";
 
 export class SetUsageCommand extends Command {
@@ -23,11 +23,9 @@ export class SetUsageCommand extends Command {
     }
 
     usageStorage.setUsage(conv, { username, userId });
-    console.log(usageStorage);
     usageStorage.save();
 
     const conversions = mapConversions(usageStorage, ConversionManager.getNames());
-    console.log(conversions);
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
     
     this.bot.answerCallbackQuery(callbackQuery.id, {

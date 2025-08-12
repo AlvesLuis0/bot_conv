@@ -5,6 +5,8 @@ import { StatusCommand } from './commands/status.js';
 import { ConvCommand } from './commands/conv.js';
 import { SetUsageCommand } from './commands/set-usage.js';
 import TelegramBot from 'node-telegram-bot-api';
+import { getAllConversions } from './utils/conversion.js';
+import { ConversionManager } from './services/conversion-manager.js';
 
 const bot = new TelegramBot(ENVIRONMENT.TELEGRAM_TOKEN, { polling: true });
 const usageStorage = new UsageStorage('conversao-usage.json');
@@ -14,6 +16,13 @@ const convCommand = new ConvCommand({ bot, dependencies: { usageStorage } });
 const setUsageCommand = new SetUsageCommand({ bot, dependencies: { usageStorage } });
 
 usageStorage.load();
+
+(async function() {
+  const responses = await getAllConversions();
+  for(let i = 1; i <= 9; i++) {
+    ConversionManager.setName(i, responses[i - 1]);
+  }
+})()
 
 bot.onText(helpCommand.regex, helpCommand.execute);
 bot.onText(statusCommand.regex, statusCommand.execute);

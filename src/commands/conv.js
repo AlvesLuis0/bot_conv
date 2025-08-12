@@ -1,6 +1,6 @@
 import { Command } from "./command.js";
 import { ConversionManager } from "../services/conversion-manager.js";
-import { generateConversionInlineKeyboard, getAllConversions, mapConversions } from "../utils/conv.js";
+import { generateConversionInlineKeyboard, getAllConversions, mapConversions } from "../utils/conversion.js";
 
 export class ConvCommand extends Command {
   regex = /^\/conv$/;
