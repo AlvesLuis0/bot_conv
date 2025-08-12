@@ -1,8 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { SessionManager } from './services/session-manager.js';
-import { Authenticator } from './services/authenticator.js';
-import { RequestSigner } from './services/request-signer.js';
-import { Endpoint } from './services/endpoint.js';
+import { SessionManager } from './core/session-manager.js';
+import { Authenticator } from './core/authenticator.js';
+import { RequestSigner } from './core/request-signer.js';
+import { Endpoint } from './core/endpoint.js';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
@@ -230,11 +230,11 @@ bot.onText(/^\/conv$/, async (msg) => {
   const chatId = msg.chat.id;
   
   // Verificar se é um chat privado
-  if (msg.chat.type === 'private') {
-    // Não permitir o comando /conv em chat privado
-    await bot.sendMessage(chatId, '⚠️ O comando /conv só está disponível em grupos.\n\nUtilize /status para verificar o status atual ou /help para ver todos os comandos disponíveis.');
-    return;
-  }
+  //if (msg.chat.type === 'private') {
+  //  // Não permitir o comando /conv em chat privado
+  //  await bot.sendMessage(chatId, '⚠️ O comando /conv só está disponível em grupos.\n\nUtilize /status para verificar o status atual ou /help para ver todos os comandos disponíveis.');
+  //  return;
+  //}
   
   const loadingMsg = await bot.sendMessage(chatId, 'Consultando conversões, aguarde...');
   
