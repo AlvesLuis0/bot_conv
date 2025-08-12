@@ -1,6 +1,6 @@
 import { Command } from "./command.js";
-import { ConversionService } from "../services/conversion.js";
 import { ConversionManager } from "../services/conversion-manager.js";
+import { generateConversionInlineKeyboard, getAllConversions, mapConversions } from "../utils/conv.js";
 
 export class ConvCommand extends Command {
   regex = /^\/conv$/;
@@ -23,56 +23,4 @@ export class ConvCommand extends Command {
       reply_markup: inlineKeyboard
     });
   }
-}
-
-
-
-// utils
-async function getAllConversions() {
-  const requests = [];
-  for(let i = 1; i <= 9; i++) {
-    requests.push(new ConversionService(i).getName());
-  }
-  return await Promise.all(requests);
-}
-
-function mapConversions(usageStorage, responses) {
-  const conversions = [];
-  for(let i = 1; i <= 9; i++) {
-    const name = responses[i - 1];
-    const usage = usageStorage.data.get(i);
-    conversions.push({
-      number: i,
-      name,
-      inUse: !!usage,
-      username: usage?.username
-    });
-  }
-  return conversions;
-}
-
-function generateConversionInlineKeyboard(conversions) {
-  const keyboard = [];
-
-  for (const conv of conversions) {
-    const row = [];
-
-    const emoji = conv.inUse ? '🔴' : '🟢';
-    let text = `${emoji} Conversão ${conv.number}: ${conv.name}`;
-    if (conv.inUse && conv.username) {
-      text += ` @${conv.username}`;
-    }
-    
-    const actionType = conv.inUse ? 'liberar' : 'usar';
-    row.push({
-      text: text,
-      callback_data: `${actionType}_${conv.number}`
-    });
-
-    keyboard.push(row);
-  }
-  
-  return {
-    inline_keyboard: keyboard
-  };
 }

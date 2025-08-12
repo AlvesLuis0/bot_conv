@@ -1,6 +1,6 @@
 import axios from 'axios';
 import moment from 'moment';
-import { sha256, crc32 } from '../utils/crypto-utils.js';
+import { sha256, crc32 } from '../utils/crypto.js';
 
 export class Authenticator {
   constructor(api, session) {

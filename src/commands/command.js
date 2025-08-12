@@ -11,4 +11,8 @@ export class Command {
     const chatId = msg.chat.id;
     this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
+
+  checkAndExecute(query) {
+    return false;
+  }
 }

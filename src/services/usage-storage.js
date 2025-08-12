@@ -7,16 +7,25 @@ export class UsageStorage {
     this.path = path.join(process.cwd(), 'data', file);
   }
 
-  setUsage(user, conv) {
-    const usage = this.data.get(conv || {});
-    usage.username = user.name;
-    usage.userId = user.id;
+  getUsage(conv) {
+    return this.data.get(parseInt(conv));
+  }
+
+  setUsage(conv, user) {
+    conv = parseInt(conv);
+    const usage = this.data.get(conv) || {};
+    usage.username = user.username;
+    usage.userId = user.userId;
     usage.timestamp = Date.now()
     this.data.set(conv, usage);
   }
 
+  inUse(conv) {
+    return this.data.has(parseInt(conv));
+  }
+
   removeUsage(conv) {
-    this.data.delete(conv);
+    this.data.delete(parseInt(conv));
   }
 
   async save() {

@@ -1,4 +1,4 @@
-import { crc32, toHex } from "../utils/crypto-utils.js";
+import { crc32, toHex } from "../utils/crypto.js";
 
 export class RequestSigner {
   constructor(api, session) {
