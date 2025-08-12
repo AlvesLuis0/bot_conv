@@ -15,6 +15,8 @@ const bot = new TelegramBot(ENVIRONMENT.TELEGRAM_TOKEN, { polling: true });
 const conversaoUsage = new Map(); // conversaoNumber -> { username, userId, timestamp }
 const activeConvMessages = new Map(); // chatId -> { messageId, userId }
 let cachedConversoes = []; // Cache global de conversões com seus nomes
+const oldConvMessages = new Map(); // chatId -> {messageId, timestamp} - Para rastrear o último menu ativo por chat
+const oldStatusMessages = new Map(); // chatId -> {messageId, timestamp} - Para rastrear a última mensagem de status por chat
 
 // Caminho do arquivo de dados
 const dataFile = path.join(process.cwd(), 'data', 'conversao-usage.json');
@@ -119,7 +121,16 @@ function generateConversaoInlineKeyboard(conversoes) {
 // Função para enviar ou atualizar a mensagem das conversões
 async function updateConvMessage(chatId, messageId = null, shouldFetchNames = true) {
   // Recarrega os dados do arquivo antes de atualizar
+  // Limpar o Map antes de recarregar para garantir que remova conversões que foram liberadas
+  conversaoUsage.clear();
   loadUsageData();
+  
+  // Para garantir dados atualizados, forçamos a recarga no comando /status
+  if (!shouldFetchNames) {
+    // Limpa o cache de nomes também quando o comando status é chamado
+    cachedConversoes = [];
+    shouldFetchNames = true; // Força buscar os nomes novamente
+  }
   
   try {
     const conversoes = [];
@@ -218,11 +229,41 @@ async function updateConvMessage(chatId, messageId = null, shouldFetchNames = tr
 bot.onText(/^\/conv$/, async (msg) => {
   const chatId = msg.chat.id;
   
+  // Verificar se é um chat privado
+  if (msg.chat.type === 'private') {
+    // Não permitir o comando /conv em chat privado
+    await bot.sendMessage(chatId, '⚠️ O comando /conv só está disponível em grupos.\n\nUtilize /status para verificar o status atual ou /help para ver todos os comandos disponíveis.');
+    return;
+  }
+  
   const loadingMsg = await bot.sendMessage(chatId, 'Consultando conversões, aguarde...');
   
   try {
+    // Tentar apagar a mensagem de comando se o bot for admin
+    await tryDeleteCommandMessage(msg);
+    
+    // Invalidar menu anterior deste chat (deve haver apenas um menu ativo por chat)
+    if (oldConvMessages.has(chatId)) {
+      const oldMenuData = oldConvMessages.get(chatId);
+      // Apagar mensagem antiga ao invés de editar
+      try {
+        await bot.deleteMessage(chatId, oldMenuData.messageId);
+        console.log(`Mensagem antiga ${oldMenuData.messageId} apagada com sucesso`);
+      } catch (err) {
+        console.log(`Não foi possível apagar mensagem ${oldMenuData.messageId}: ${err.message}`);
+      }
+    }
+    
     // Busca os nomes das conversões (sempre consulta as APIs)
     await updateConvMessage(chatId, loadingMsg.message_id, true);
+    
+    // Guarda a nova mensagem como o único menu ativo para este chat
+    // junto com o timestamp de quando foi criado
+    oldConvMessages.set(chatId, {
+      messageId: loadingMsg.message_id,
+      timestamp: Date.now()
+    });
+    
   } catch (error) {
     console.error('Erro ao processar comando /conv:', error);
     await bot.editMessageText('❌ Erro ao consultar conversões. Tente novamente.', {
@@ -240,6 +281,28 @@ bot.on('callback_query', async (callbackQuery) => {
   const messageId = msg.message_id;
   const userId = callbackQuery.from.id;
   const username = callbackQuery.from.username || callbackQuery.from.first_name;
+  
+  // Verificar se esta mensagem é o menu ativo para este chat
+  const isActiveMenu = oldConvMessages.has(chatId) && 
+                      oldConvMessages.get(chatId).messageId === messageId;
+  
+  // Se a mensagem não é o menu ativo, é uma mensagem antiga
+  if (!isActiveMenu) {
+    await bot.answerCallbackQuery(callbackQuery.id, {
+      text: `⚠️ Este menu está desatualizado. Use o comando /conv para ver o menu atual.`,
+      show_alert: true
+    });
+    
+    try {
+      // Apagar mensagem ao invés de editar
+      await bot.deleteMessage(chatId, messageId);
+      console.log(`Mensagem desatualizada ${messageId} apagada com sucesso após tentativa de uso`);
+    } catch (err) {
+      console.log(`Não foi possível apagar mensagem ${messageId}: ${err.message}`);
+    }
+    
+    return;
+  }
   
   // Extrair ação e número da conversão
   const [actionType, conversaoNumberStr] = action.split('_');
@@ -334,34 +397,184 @@ bot.on('callback_query', async (callbackQuery) => {
   }
 });
 
+// Função para verificar e invalidar menus antigos
+function invalidateOldMenus() {
+  console.log('Verificando menus antigos para invalidar...');
+  const MENU_LIFETIME_MS = 24 * 60 * 60 * 1000; // 24 horas
+  const STATUS_LIFETIME_MS = 24 * 60 * 60 * 1000; // 24 horas para mensagens de status
+  const now = Date.now();
+  
+  // Verificar e remover menus antigos
+  for (const [chatId, menuData] of oldConvMessages.entries()) {
+    // Verificar se o menu está ativo há mais de 24 horas
+    if (now - menuData.timestamp > MENU_LIFETIME_MS) {
+      try {
+        // Apagar menu antigo ao invés de editá-lo
+        bot.deleteMessage(chatId, menuData.messageId);
+        
+        // Remover da lista de menus ativos
+        oldConvMessages.delete(chatId);
+        
+        console.log(`Menu ${menuData.messageId} do chat ${chatId} apagado por tempo de inatividade (24h)`);
+      } catch (err) {
+        console.log(`Erro ao apagar menu ${menuData.messageId}: ${err.message}`);
+        // Se não conseguir apagar a mensagem, pode ser que ela não exista mais
+        // Nesse caso, removemos da lista de qualquer forma
+        oldConvMessages.delete(chatId);
+      }
+    }
+  }
+  
+  // Verificar e remover mensagens de status antigas
+  for (const [chatId, statusData] of oldStatusMessages.entries()) {
+    // Verificar se a mensagem de status está ativa há mais de 24 horas
+    if (now - statusData.timestamp > STATUS_LIFETIME_MS) {
+      try {
+        // Apagar mensagem de status antiga
+        bot.deleteMessage(chatId, statusData.messageId);
+        
+        // Remover da lista de mensagens de status
+        oldStatusMessages.delete(chatId);
+        
+        console.log(`Mensagem de status ${statusData.messageId} do chat ${chatId} apagada por tempo de inatividade (24h)`);
+      } catch (err) {
+        console.log(`Erro ao apagar mensagem de status ${statusData.messageId}: ${err.message}`);
+        // Se não conseguir apagar a mensagem, pode ser que ela não exista mais
+        // Nesse caso, removemos da lista de qualquer forma
+        oldStatusMessages.delete(chatId);
+      }
+    }
+  }
+}
+
+// Agendar a verificação a cada hora
+setInterval(invalidateOldMenus, 60 * 60 * 1000); // 1 hora
+
+// Função para formatar o tempo de uso
+function formatTimeUsed(timestamp) {
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  
+  // Cálculo das diferentes unidades de tempo
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+  
+  // Formatação com a unidade mais apropriada
+  if (years > 0) {
+    return `${years}a`; // Anos
+  } else if (months > 0) {
+    return `${months}m`; // Meses
+  } else if (weeks > 0) {
+    return `${weeks}sem`; // Semanas
+  } else if (days > 0) {
+    return `${days}d`; // Dias
+  } else if (hours > 0) {
+    return `${hours}h`; // Horas
+  } else {
+    return `${minutes}min`; // Minutos
+  }
+}
+
+// Função para tentar apagar a mensagem de comando se o bot for admin
+async function tryDeleteCommandMessage(msg) {
+  // Não apaga mensagens em chats privados
+  if (msg.chat.type === 'private') {
+    return;
+  }
+  
+  try {
+    // Verificar se o bot é administrador no grupo
+    const botId = (await bot.getMe()).id;
+    const botMember = await bot.getChatMember(msg.chat.id, botId);
+    
+    // Se o bot for admin ou criador, apaga a mensagem de comando
+    if (['administrator', 'creator'].includes(botMember.status)) {
+      await bot.deleteMessage(msg.chat.id, msg.message_id);
+      console.log(`Mensagem de comando ${msg.message_id} apagada (bot é admin)`);
+    }
+  } catch (err) {
+    console.log(`Não foi possível verificar status de admin do bot ou apagar mensagem: ${err.message}`);
+  }
+}
+
 // Comando para verificar apenas o status de uso (sem consultar as bases)
 bot.onText(/^\/status$/, async (msg) => {
   const chatId = msg.chat.id;
   
+  // Tentar apagar a mensagem de comando se o bot for admin
+  await tryDeleteCommandMessage(msg);
+  
   // Recarrega os dados do arquivo antes de mostrar o status
+  // Limpar o Map antes de recarregar para garantir que remova conversões que foram liberadas
+  conversaoUsage.clear();
   loadUsageData();
   
-  if (conversaoUsage.size === 0) {
-    bot.sendMessage(chatId, '✅ Todas as conversões estão disponíveis.');
-    return;
+  // Apagar mensagem anterior de status, se existir
+  if (oldStatusMessages.has(chatId)) {
+    const oldStatusData = oldStatusMessages.get(chatId);
+    try {
+      await bot.deleteMessage(chatId, oldStatusData.messageId);
+      console.log(`Mensagem de status antiga ${oldStatusData.messageId} apagada com sucesso`);
+    } catch (err) {
+      console.log(`Não foi possível apagar mensagem de status ${oldStatusData.messageId}: ${err.message}`);
+    }
   }
   
   let message = '*Status atual das conversões:*\n\n';
   
-  for (const [conversaoNumber, usage] of conversaoUsage.entries()) {
-    const timeUsed = Math.floor((Date.now() - usage.timestamp) / (1000 * 60)); // minutos
-    message += `Conversão ${conversaoNumber}: 🔒 Em uso por @${usage.username} (há ${timeUsed}min)\n`;
+  if (conversaoUsage.size === 0) {
+    // Enviar mensagem e salvar referência
+    const sentMsg = await bot.sendMessage(chatId, '✅ Todas as conversões estão disponíveis.', { parse_mode: 'Markdown' });
+    
+    // Salvar referência da nova mensagem de status
+    oldStatusMessages.set(chatId, {
+      messageId: sentMsg.message_id,
+      timestamp: Date.now()
+    });
+    
+    return;
   }
   
-  bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  for (const [conversaoNumber, usage] of conversaoUsage.entries()) {
+    const timeFormatted = formatTimeUsed(usage.timestamp);
+    message += `Conversão ${conversaoNumber}: 🔒 Em uso por @${usage.username} (há ${timeFormatted})\n`;
+  }
+  
+  // Enviar mensagem e salvar referência
+  const sentMsg = await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  
+  // Salvar referência da nova mensagem de status
+  oldStatusMessages.set(chatId, {
+    messageId: sentMsg.message_id,
+    timestamp: Date.now()
+  });
 });
 
 // Comando de ajuda
 bot.onText(/^\/help$/, async (msg) => {
   const chatId = msg.chat.id;
-  const helpMessage = `
-*Comandos disponíveis:*
+  const isPrivateChat = msg.chat.type === 'private';
+  
+  // Tentar apagar a mensagem de comando se o bot for admin
+  await tryDeleteCommandMessage(msg);
+  
+  let helpMessage = `
+*Comandos disponíveis:*\n`;
 
+  if (isPrivateChat) {
+    helpMessage += `
+/status - Mostra o status de uso atual das conversões
+/help - Mostra esta mensagem de ajuda
+
+*Observação:*
+O comando /conv só está disponível em grupos.
+`;
+  } else {
+    helpMessage += `
 /conv - Consulta todas as bases e mostra botões para interação
 /status - Mostra apenas o status de uso atual
 /help - Mostra esta mensagem de ajuda
@@ -373,7 +586,8 @@ bot.onText(/^\/help$/, async (msg) => {
 • Você pode liberar conversões que estão em seu uso
 • Administradores e donos de grupos podem liberar qualquer conversão
 • Use /conv novamente para atualizar a lista de bases
-  `;
+`;
+  }
   
   bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
 });
