@@ -13,11 +13,11 @@ export class RemoveUsageCommand extends Command {
     const usageStorage = this.dependencies.usageStorage;
     const usage = usageStorage.getUsage(conv);
 
-    const permittedIds = [
-      usage.userId
-    ];
+    const chatMember = await this.bot.getChatMember(chatId, userId);
+    const isAdmin = ['creator', 'administrator'].includes(chatMember.status);
+    const isConvOwner = userId == usage.userId;
 
-    if(!permittedIds.includes(userId)) {
+    if(!(isAdmin || isConvOwner)) {
       this.bot.answerCallbackQuery(callbackQuery.id, {
         text: `❌ Apenas o usuário @${usage.username} ou administradores podem liberar esta conversão.`,
         show_alert: true
