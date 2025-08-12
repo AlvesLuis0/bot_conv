@@ -1,0 +1,13 @@
+services:
+  conversoes-bot:
+    image: conversoes-bot:latest
+    container_name: conversoes-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=${TZ:-America/Sao_Paulo}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data 
