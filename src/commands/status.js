@@ -8,6 +8,11 @@ export class StatusCommand extends Command {
     const chatId = msg.chat.id;
     const usageStorage = this.dependencies.usageStorage;
 
+    if (!usageStorage.data.size) {
+      this.bot.sendMessage(chatId, '✅ Todas as conversões estão disponíveis.');
+      return;
+    }
+
     let message = '*Status atual das conversões:*\n\n';
 
     for (const [i, usage] of usageStorage.data.entries()) {
