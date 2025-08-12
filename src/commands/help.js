@@ -1,3 +1,5 @@
+import { Command } from "./command.js";
+
 const message = `
 *Comandos disponíveis:*
 
@@ -14,11 +16,11 @@ const message = `
 • Use /conv novamente para atualizar a lista de bases
 `;
 
-export const HelpCommand = {
-  regex: /^\/help$/,
+export class HelpCommand extends Command {
+  regex = /^\/help$/;
 
-  execute: async function(bot, msg) {
+  execute = async (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
 }

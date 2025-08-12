@@ -1,0 +1,20 @@
+import { Command } from "./command.js";
+import { formatTimeFrom } from "../utils/time-format.js"
+
+export class StatusCommand extends Command {
+  regex = /^\/status$/;
+
+  execute = async (msg) => {
+    const chatId = msg.chat.id;
+    const usageStorage = this.dependencies.usageStorage;
+
+    let message = '*Status atual das conversões:*\n\n';
+
+    for (const [i, usage] of usageStorage.data.entries()) {
+      const timeFormatted = formatTimeFrom(usage.timestamp);
+      message += `Conversão ${i}: 🔒 Em uso por @${usage.username} (há ${timeFormatted})\n`;
+    }
+
+    this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  }
+}
