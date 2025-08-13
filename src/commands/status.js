@@ -9,7 +9,7 @@ export class StatusCommand extends Command {
     const usageStorage = this.dependencies.usageStorage;
 
     if (!usageStorage.data.size) {
-      this.bot.sendMessage(chatId, '✅ Todas as conversões estão disponíveis.');
+      await this.bot.sendMessage(chatId, '✅ Todas as conversões estão disponíveis.');
       return;
     }
 
@@ -20,6 +20,6 @@ export class StatusCommand extends Command {
       message += `Conversão ${i}: 🔒 Em uso por @${usage.username} (há ${timeFormatted})\n`;
     }
 
-    this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
 }

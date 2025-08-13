@@ -21,6 +21,6 @@ export class HelpCommand extends Command {
 
   execute = async (msg) => {
     const chatId = msg.chat.id;
-    this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
 }

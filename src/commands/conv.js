@@ -18,7 +18,7 @@ export class ConvCommand extends Command {
       ConversionManager.setName(conv.number, conv.name);
     }
 
-    this.bot.sendMessage(chatId, message, {
+    await this.bot.sendMessage(chatId, message, {
       parse_mode: 'Markdown',
       reply_markup: inlineKeyboard
     });

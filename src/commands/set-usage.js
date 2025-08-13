@@ -18,25 +18,25 @@ export class SetUsageCommand extends Command {
     const conversions = mapConversions(usageStorage, ConversionManager.getNames());
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
     
-    this.bot.answerCallbackQuery(callbackQuery.id, {
+    await this.bot.answerCallbackQuery(callbackQuery.id, {
       text: `✅ Você está usando a Conversão ${conv}.`,
       show_alert: false
     });
 
     const message = '*Bases rodando em cada conversão:*\n\n_Selecione uma conversão para informar se está em uso por você._';
-    this.bot.editMessageText(message, {
+    await this.bot.editMessageText(message, {
       chat_id: chatId,
       message_id: messageId,
       parse_mode: 'Markdown',
       reply_markup: inlineKeyboard
     });
 
-    usageStorage.save();
+    await usageStorage.save();
   }
 
-  checkAndExecute(query) {
+  checkAndCallback(query) {
     if(query.data.startsWith('usar')) {
-      this.execute(query);
+      this.callback(query);
       return true;
     }
     return false;

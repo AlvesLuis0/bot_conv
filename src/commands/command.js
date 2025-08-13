@@ -1,3 +1,5 @@
+import { logger } from "../config/logger.js";
+
 const message = 'Falta implementar';
 
 export class Command {
@@ -12,7 +14,15 @@ export class Command {
     this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
 
-  checkAndExecute(query) {
+  callback = async (msg) => {
+    try {
+      await this.execute(msg);
+    } catch(e) {
+      logger.error(e.message);
+    }
+  }
+
+  checkAndCallback(query) {
     return false;
   }
 }

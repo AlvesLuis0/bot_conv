@@ -8,6 +8,7 @@ import { RemoveUsageCommand } from './commands/remove-usage.js';
 import TelegramBot from 'node-telegram-bot-api';
 import { getAllConversions } from './utils/conversion.js';
 import { ConversionManager } from './services/conversion-manager.js';
+import { logger } from './config/logger.js';
 
 const bot = new TelegramBot(ENVIRONMENT.TELEGRAM_TOKEN, { polling: true });
 const usageStorage = new UsageStorage('conversao-usage.json');
@@ -26,12 +27,12 @@ usageStorage.load();
   }
 })()
 
-bot.onText(helpCommand.regex, helpCommand.execute);
-bot.onText(statusCommand.regex, statusCommand.execute);
-bot.onText(convCommand.regex, convCommand.execute);
+bot.onText(helpCommand.regex, helpCommand.callback);
+bot.onText(statusCommand.regex, statusCommand.callback);
+bot.onText(convCommand.regex, convCommand.callback);
 bot.on('callback_query', async (callbackQuery) => {
-  if (setUsageCommand.checkAndExecute(callbackQuery)) return;
-  if (removeUsageCommand.checkAndExecute(callbackQuery)) return;
+  if (setUsageCommand.checkAndCallback(callbackQuery)) return;
+  if (removeUsageCommand.checkAndCallback(callbackQuery)) return;
 });
 
-console.log('Bot iniciado com sucesso!');
+logger.info('Bot iniciado com sucesso!');
