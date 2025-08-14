@@ -1,6 +1,6 @@
 import { Command } from "./command.js";
-import { ConversionManager } from "../services/conversion-manager.js";
 import { generateConversionInlineKeyboard, getAllConversions, mapConversions } from "../utils/conversion.js";
+import { localstorage } from "../utils/localstorage.js";
 
 export class ConvCommand extends Command {
   regex = /^\/conv$/;
@@ -15,7 +15,7 @@ export class ConvCommand extends Command {
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
 
     for(const conv of conversions) {
-      ConversionManager.setName(conv.number, conv.name);
+      localstorage.conversions[conv.number - 1] = conv.name;
     }
 
     await this.bot.sendMessage(chatId, message, {

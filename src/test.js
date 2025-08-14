@@ -7,7 +7,7 @@ import { SetUsageCommand } from './commands/set-usage.js';
 import { RemoveUsageCommand } from './commands/remove-usage.js';
 import TelegramBot from 'node-telegram-bot-api';
 import { getAllConversions } from './utils/conversion.js';
-import { ConversionManager } from './services/conversion-manager.js';
+import { localstorage } from './utils/localstorage.js';
 import { logger } from './config/logger.js';
 
 const bot = new TelegramBot(ENVIRONMENT.TELEGRAM_TOKEN, { polling: true });
@@ -18,12 +18,18 @@ const convCommand = new ConvCommand({ bot, dependencies: { usageStorage } });
 const setUsageCommand = new SetUsageCommand({ bot, dependencies: { usageStorage } });
 const removeUsageCommand = new RemoveUsageCommand({ bot, dependencies: { usageStorage } });
 
+bot.tryDeleteMessage = async function(chatId, messageId, options) {
+  try {
+    return await this.deleteMessage(chatId, messageId, options);
+  } catch(e) {}
+}
+
 usageStorage.load();
 
 (async function() {
   const responses = await getAllConversions();
-  for(let i = 1; i <= 9; i++) {
-    ConversionManager.setName(i, responses[i - 1]);
+  for(let i = 0; i < responses.length; i++) {
+    localstorage.conversions[i] = responses[i];
   }
 })()
 

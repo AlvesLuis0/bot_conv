@@ -16,14 +16,18 @@ export class Command {
   }
 
   callback = async (msg) => {
-    const chatId = msg.chat.id;
+    if(msg?.chat?.id) {
+      const chatId = msg.chat.id;
+      const isChatPermitted = [null, chatId.toString()].includes(ENVIRONMENT.TELEGRAM_CHAT_ID);
 
-    const isChatPermitted = [null, chatId.toString()].includes(ENVIRONMENT.TELEGRAM_CHAT_ID);
-    if(!isChatPermitted) {
-      const message = '⚠️ Esse chat não tem permissão pra receber mensagens desse bot.';
-      logger.warn(message);
-      await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-      return;
+      if(!isChatPermitted) {
+        const message = '⚠️ Esse chat não tem permissão pra receber mensagens desse bot.';
+        logger.warn(message);
+        await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        return;
+      }
+
+      await this.bot.tryDeleteMessage(chatId, msg.message_id);
     }
 
     try {

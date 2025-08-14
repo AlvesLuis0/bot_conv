@@ -1,6 +1,6 @@
-import { ConversionManager } from "../services/conversion-manager.js";
 import { generateConversionInlineKeyboard, mapConversions } from "../utils/conversion.js";
 import { Command } from "./command.js";
+import { localstorage } from "../utils/localstorage.js";
 
 export class SetUsageCommand extends Command {
   execute = async (callbackQuery) => {
@@ -15,7 +15,7 @@ export class SetUsageCommand extends Command {
 
     usageStorage.setUsage(conv, { username, userId });
 
-    const conversions = mapConversions(usageStorage, ConversionManager.getNames());
+    const conversions = mapConversions(usageStorage, localstorage.conversions);
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
     
     await this.bot.answerCallbackQuery(callbackQuery.id, {
