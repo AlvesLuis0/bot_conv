@@ -13,12 +13,12 @@ npm install
 2. Configure o token do seu bot Telegram:
 
 - Crie um bot no Telegram falando com o [@BotFather](https://t.me/BotFather) e obtenha o token.
-- Defina a variável de ambiente `TELEGRAM_TOKEN` com o token do seu bot, ou edite o arquivo `src/bot.js` e substitua `COLOQUE_SEU_TOKEN_AQUI` pelo token.
+- Defina as variáveis de ambiente indicadas no aquivo `.env.example`.
 
 3. Execute o bot:
 
 ```bash
-node src/bot.js
+npm start
 ```
 
 4. Adicione o bot ao seu grupo do Telegram.
@@ -29,4 +29,4 @@ node src/bot.js
 /conv
 ```
 
-O bot irá responder com os nomes das bases rodando em cada conversão. 
+O bot irá responder com os nomes das bases rodando em cada conversão.

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/bot.js",
-    "dev": "nodemon src/test.js"
+    "dev": "nodemon src/bot.js"
   },
   "keywords": [],
   "author": "",
