@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import packageInfo from '../../package.json' assert { type: 'json' };
+import packageInfo from '../../package.json' with { type: 'json' };
 dotenv.config();
 
 export const ENVIRONMENT = {

@@ -17,6 +17,8 @@ export class Command {
   }
 
   callback = async (msg) => {
+    logger.debug(JSON.stringify(msg));
+
     if(msg?.chat?.id) {
       const chatId = msg.chat.id;
       const isChatPermitted = [null, chatId.toString()].includes(ENVIRONMENT.TELEGRAM_CHAT_ID);
