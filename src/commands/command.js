@@ -1,5 +1,6 @@
 import { ENVIRONMENT } from "../config/env.js";
 import { logger } from "../config/logger.js";
+import { localstorage } from "../utils/localstorage.js";
 
 const message = 'Falta implementar';
 
@@ -27,11 +28,20 @@ export class Command {
         return;
       }
 
-      await this.bot.tryDeleteMessage(chatId, msg.message_id);
+      this.bot.tryDeleteMessage(chatId, msg.message_id);
+      if(localstorage.lastMessageId) {
+        this.bot.tryDeleteMessage(chatId, localstorage.lastMessageId);
+      }
     }
 
     try {
-      await this.execute(msg);
+      const lastMessage = await this.execute(msg);
+
+      if(lastMessage) {
+        this.bot.tryDeleteMessage(msg.chat.id, localstorage.lastMessageId);
+        localstorage.lastMessageId = lastMessage.message_id;
+      }
+
     } catch(e) {
       logger.error(e.message);
     }

@@ -18,7 +18,7 @@ export class ConvCommand extends Command {
       localstorage.conversions[conv.number - 1] = conv.name;
     }
 
-    await this.bot.sendMessage(chatId, message, {
+    return await this.bot.sendMessage(chatId, message, {
       parse_mode: 'Markdown',
       reply_markup: inlineKeyboard
     });

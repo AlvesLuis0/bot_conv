@@ -1,3 +1,4 @@
 export const localstorage = {
-  conversions: []
+  conversions: [],
+  lastMessageId: null
 };

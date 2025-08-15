@@ -20,6 +20,6 @@ export class StatusCommand extends Command {
       message += `Conversão ${i}: 🔒 Em uso por @${usage.username} (há ${timeFormatted})\n`;
     }
 
-    await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+    return await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
 }
