@@ -1,13 +1,12 @@
 {
-  "name": "conversoes",
-  "version": "1.2.0",
+  "name": "bot_conv",
+  "version": "1.3.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/bot.js",
   "type": "module",
   "scripts": {
     "start": "node src/bot.js",
-    "dev": "nodemon src/bot.js",
-    "test": "nodemon src/test.js"
+    "dev": "nodemon src/test.js"
   },
   "keywords": [],
   "author": "",

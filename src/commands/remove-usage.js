@@ -18,7 +18,7 @@ export class RemoveUsageCommand extends Command {
     const isConvOwner = userId == usage.userId;
 
     if(!(isAdmin || isConvOwner)) {
-      await this.bot.answerCallbackQuery(callbackQuery.id, {
+      this.bot.answerCallbackQuery(callbackQuery.id, {
         text: `❌ Apenas o usuário @${usage.username} ou administradores podem liberar esta conversão.`,
         show_alert: true
       });
@@ -30,7 +30,7 @@ export class RemoveUsageCommand extends Command {
     const conversions = mapConversions(usageStorage, localstorage.conversions);
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
     
-    await this.bot.answerCallbackQuery(callbackQuery.id, {
+    this.bot.answerCallbackQuery(callbackQuery.id, {
       text: `✅ Conversão ${conv} liberada com sucesso.`,
       show_alert: false
     });

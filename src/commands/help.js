@@ -1,6 +1,8 @@
+import { ENVIRONMENT } from "../config/env.js";
 import { Command } from "./command.js";
 
 const message = `
+*JetroConvBot v.${ENVIRONMENT.VERSION}*
 *Comandos disponíveis:*
 
 /conv - Consulta todas as bases e mostra botões para interação

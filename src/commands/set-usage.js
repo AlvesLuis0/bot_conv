@@ -18,7 +18,7 @@ export class SetUsageCommand extends Command {
     const conversions = mapConversions(usageStorage, localstorage.conversions);
     const inlineKeyboard = generateConversionInlineKeyboard(conversions);
     
-    await this.bot.answerCallbackQuery(callbackQuery.id, {
+    this.bot.answerCallbackQuery(callbackQuery.id, {
       text: `✅ Você está usando a Conversão ${conv}.`,
       show_alert: false
     });
