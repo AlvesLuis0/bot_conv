@@ -1,5 +1,6 @@
 services:
   conversoes-bot:
+    build: .
     image: conversoes-bot:latest
     container_name: conversoes-bot
     restart: unless-stopped
