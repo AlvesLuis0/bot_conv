@@ -15,9 +15,12 @@ export class StatusCommand extends Command {
 
     let message = '*Status atual das conversões:*\n\n';
 
+    const escapeMarkdown = (text) => text.replace(/([_*\[\]`])/g, '\\$1');
+
     for (const [i, usage] of usageStorage.data.entries()) {
       const timeFormatted = formatTimeFrom(usage.timestamp);
-      message += `Conversão ${i}: 🔒 Em uso por @${usage.username} (há ${timeFormatted})\n`;
+      const safeUsername = usage.username ? escapeMarkdown(usage.username) : 'usuario';
+      message += `Conversão ${i}: 🔒 Em uso por @${safeUsername} (há ${timeFormatted})\n`;
     }
 
     return await this.bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
