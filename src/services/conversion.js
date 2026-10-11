@@ -18,13 +18,27 @@ export class ConversionService {
     this.auth = new Authenticator(this.apiEndpoint, this.session);
     this.signer = new RequestSigner(this.apiEndpoint, this.session);
   }
+  async getNameFromLoginScreen() {
+    const { data } = await axios.get(`${this.apiEndpoint.base}/login`);
+    const match = data.match(/<div class="versao">\s*<span>([^<]+)<\/span>/);
+    return match ? match[1].trim() : null;
+  }
+
+  async getNameFromSession() {
+    await this.auth.signIn(credentials);
+    const path = this.apiEndpoint.getFullPath('api?modelo%3Dappgrupoempress');
+    const signedUrl = `${this.apiEndpoint.base}${path}&session_signature=${this.signer.sign(path)}`;
+    return (await axios.get(signedUrl)).data.data[0].Subdominio;
+  }
+
   async getName() {
     try {
-      await this.auth.signIn(credentials);
-      const path = this.apiEndpoint.getFullPath('api?modelo%3Dappgrupoempress');
-      const signedUrl = `${this.apiEndpoint.base}${path}&session_signature=${this.signer.sign(path)}`;
-      return (await axios.get(signedUrl)).data.data[0].Subdominio;
+      const name = await this.getNameFromLoginScreen();
+      if (name) return name;
+    } catch { /* tela de login indisponível, tenta via sessão */ }
 
+    try {
+      return await this.getNameFromSession();
     } catch {
       return 'Fora do ar';
     }
