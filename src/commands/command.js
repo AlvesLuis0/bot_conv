@@ -21,7 +21,8 @@ export class Command {
 
     if(msg?.chat?.id) {
       const chatId = msg.chat.id;
-      const isChatPermitted = [null, chatId.toString()].includes(ENVIRONMENT.TELEGRAM_CHAT_ID);
+      const allowedChats = (ENVIRONMENT.TELEGRAM_CHAT_ID ?? '').split(',').map(chat => chat.trim()).filter(Boolean);
+      const isChatPermitted = allowedChats.length === 0 || allowedChats.includes(chatId.toString());
 
       if(!isChatPermitted) {
         const message = '⚠️ Esse chat não tem permissão pra receber mensagens desse bot.';
